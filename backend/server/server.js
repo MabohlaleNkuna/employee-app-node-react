@@ -31,9 +31,13 @@ app.post('/employees', async (req, res) => {
 
 // Fetch all employees
 app.get('/employees', async (req, res) => {
+  
   try {
+    
     const employeesSnapshot = await db.collection('employees').get();
     const employees = employeesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    
+
     res.status(200).send(employees);
   } catch (error) {
     res.status(500).send({ message: 'Error fetching employees', error });
