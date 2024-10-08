@@ -14,7 +14,7 @@ const EmployeeForm = ({ selectedEmployee, onSave }) => {
     position: '',
     department: '',
     phone: '',
-    imageUrl: '',
+    file: '',
     startDate: '',
   });
 
@@ -77,15 +77,20 @@ const EmployeeForm = ({ selectedEmployee, onSave }) => {
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
+    console.log(file);
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setEmployee((prevEmployee) => ({
-          ...prevEmployee,
-          imageUrl: reader.result,
-        }));
-      };
-      reader.readAsDataURL(file);
+      setEmployee((prevEmployee) => ({
+            ...prevEmployee,
+            file: file,
+          }));
+      // const reader = new FileReader();
+      // reader.onloadend = () => {
+      //   setEmployee((prevEmployee) => ({
+      //     ...prevEmployee,
+      //     file: reader.result,
+      //   }));
+      // };
+      // reader.readAsDataURL(file);
     }
   };
 
@@ -111,7 +116,7 @@ const EmployeeForm = ({ selectedEmployee, onSave }) => {
         position: '',
         department: '',
         phone: '',
-        imageUrl: '',
+        file: '',
         startDate: '',
       });
     } catch (error) {
@@ -189,8 +194,8 @@ const EmployeeForm = ({ selectedEmployee, onSave }) => {
         onChange={handleImageChange}
         required
       />
-      {employee.imageUrl && (
-        <img src={employee.imageUrl} alt="Employee" className="image-preview" />
+      {employee.file && (
+        <img src={employee.file} alt="Employee" className="image-preview" />
       )}
       <input
         type="date"

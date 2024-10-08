@@ -9,15 +9,19 @@ export const fetchEmployees = async () => {
   return response.json();
 };
 
-// Function to add an employee
 export const addEmployee = async (employee) => {
+  const formData = new FormData();
+  
+  console.log(employee)
+  for (const key in employee) {
+    formData.append(key, employee[key]);
+  }
+  
   const response = await fetch(`${API_URL}/employees`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(employee),
+    body: formData,
   });
+  
   if (!response.ok) {
     throw new Error('Failed to add employee');
   }
