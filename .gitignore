@@ -1,4 +1,5 @@
 backend/config/firebase-service-account.json
 node_modules
+frontend/node_modules
 firebaseConfig.js
 firebase-service-account.json
