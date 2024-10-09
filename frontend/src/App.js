@@ -1,12 +1,12 @@
-// src/App.js
 import React, { useState, useEffect } from 'react';
-import { fetchEmployees, addEmployee, updateEmployee, deleteEmployee } from './api'; // Import the API functions
+import { fetchEmployees, addEmployee, updateEmployee, deleteEmployee } from './api'; 
 import HeaderComp from './components/HeaderComp';
 import EmployeeList from './components/EmployeeList';
 import EmployeeForm from './components/EmployeeForm';
 import SearchBar from './components/SearchBar';
 import Modal from './components/Modal';
 import Button from './components/Button';
+import Loader from './components/Loader';
 import './App.css';
 
 const App = () => {
@@ -14,14 +14,18 @@ const App = () => {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false); // Loader state
 
   useEffect(() => {
     const loadEmployees = async () => {
+      setLoading(true); // Show loader while fetching employees
       try {
         const employeeList = await fetchEmployees();
         setEmployees(employeeList);
       } catch (error) {
         console.error(error);
+      } finally {
+        setLoading(false); // Hide loader after fetch
       }
     };
 
@@ -29,31 +33,30 @@ const App = () => {
   }, []);
 
   const handleAddOrUpdateEmployee = async (employee) => {
+    setLoading(true); // Show loader during add/update
     try {
-        if (employee.id) {
-            await updateEmployee(employee.id, employee);
-            alert('Employee updated successfully!');
-        } else {
-            await addEmployee(employee);
-            alert('Employee added successfully!');
-        }
-        setSelectedEmployee(null);
-        setIsModalOpen(false);
-        
-        // Re-fetch employees after add/update
-        const employeeList = await fetchEmployees();
-        setEmployees(employeeList);
-    } catch (error) {
-        console.error(error);
-    }
-};
+      if (employee.id) {
+        await updateEmployee(employee.id, employee);
+        alert('Employee updated successfully!');
+      } else {
+        await addEmployee(employee);
+        alert('Employee added successfully!');
+      }
+      setSelectedEmployee(null);
+      setIsModalOpen(false);
 
-  const handleEdit = (employee) => {
-    setSelectedEmployee(employee);
-    setIsModalOpen(true);
+      // Re-fetch employees after add/update
+      const employeeList = await fetchEmployees();
+      setEmployees(employeeList);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false); // Hide loader after action
+    }
   };
 
   const handleDelete = async (id) => {
+    setLoading(true); // Show loader during delete
     try {
       await deleteEmployee(id);
       alert('Employee deleted successfully!');
@@ -62,7 +65,14 @@ const App = () => {
       setEmployees(employeeList);
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false); // Hide loader after action
     }
+  };
+
+  const handleEdit = (employee) => {
+    setSelectedEmployee(employee);
+    setIsModalOpen(true);
   };
 
   const handleSearch = (term) => {
@@ -96,6 +106,7 @@ const App = () => {
           onSave={handleAddOrUpdateEmployee}
         />
       </Modal>
+      {loading && <Loader />} 
       <EmployeeList
         employees={filteredEmployees}
         onEdit={handleEdit}
