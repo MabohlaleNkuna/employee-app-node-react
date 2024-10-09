@@ -9,6 +9,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json({ limit: '10mb' }));
 
+require('dotenv').config();
 
 const storage = multer.memoryStorage(); 
 const upload = multer({ storage: storage });
