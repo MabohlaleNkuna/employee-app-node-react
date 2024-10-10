@@ -65,14 +65,14 @@ h2 {
 .employee-form input,
 .employee-form select,
 .employee-form button {
-  padding: 0.5rem;
+  padding: 0.2rem;
   border: 1px solid #ddd;
   border-radius: 5px;
 }
 
 .employee-form .image-preview {
-  width: 100px;
-  height: 100px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   object-fit: cover;
   margin-top: 0.5rem;
