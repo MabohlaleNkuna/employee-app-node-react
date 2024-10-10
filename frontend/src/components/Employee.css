@@ -286,7 +286,9 @@ select {
   margin: 0 auto;
   border-collapse: collapse;
 }
-
+.employee-actions, .custom-button{
+  margin-bottom: 15px;
+}
 .employee-table th,
 .employee-table td {
   border: 1px solid #ddd;
