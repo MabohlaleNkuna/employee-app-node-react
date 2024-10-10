@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'; 
 import Button from './Button';
 import './Employee.css';
 
@@ -14,35 +14,39 @@ const EmployeeList = ({ employees, onEdit, onDelete }) => {
   };
 
   const handleEdit = (employee) => {
-    handleCloseDetails(); // Close the details modal
-    onEdit(employee); // Open the edit form
+    handleCloseDetails(); 
+    onEdit(employee);
   };
 
   return (
     <div className="employee-list">
-      {/* Table for displaying basic employee info */}
-      <table className="employee-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>ID</th>
-            <th>Department</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {employees.map((employee) => (
-            <tr key={employee.id}>
-              <td>{employee.name} {employee.surname}</td>
-              <td>{employee.id}</td>
-              <td>{employee.department}</td>
-              <td>
-                <Button onClick={() => handleViewDetails(employee)} className="custom-button">View Details</Button>
-              </td>
+      {/* Conditionally render the table if there is at least one employee */}
+      {employees.length > 0 ? (
+        <table className="employee-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>ID</th>
+              <th>Department</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {employees.map((employee) => (
+              <tr key={employee.id}>
+                <td>{employee.name} {employee.surname}</td>
+                <td>{employee.id}</td>
+                <td>{employee.department}</td>
+                <td>
+                  <Button onClick={() => handleViewDetails(employee)} className="custom-button">View Details</Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p>No employees to display.</p> 
+      )}
 
       {/* Modal for showing full employee details */}
       {selectedEmployee && (
