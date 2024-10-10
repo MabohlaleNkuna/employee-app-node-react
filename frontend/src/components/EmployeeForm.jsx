@@ -32,7 +32,13 @@ const EmployeeForm = ({ selectedEmployee, onSave }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
+  
+    // Name, Surname, and Position should not contain numbers
+    if ((name === 'name' || name === 'surname' || name === 'position') && !/^[a-zA-Z\s]*$/.test(value)) {
+      alert(`${name.charAt(0).toUpperCase() + name.slice(1)} should not contain numbers`);
+      return;
+    }
+  
     if (name === 'idNum' && !/^\d*$/.test(value)) {
       setIdError('ID number must be numeric');
     } else if (name === 'idNum' && value.length > 13) {
@@ -40,7 +46,7 @@ const EmployeeForm = ({ selectedEmployee, onSave }) => {
     } else {
       setIdError('');
     }
-
+  
     if (name === 'phone') {
       if (!/^\d*$/.test(value)) {
         setPhoneError('Phone number cannot contain letters or special characters');
@@ -48,7 +54,7 @@ const EmployeeForm = ({ selectedEmployee, onSave }) => {
         setPhoneError('');
       }
     }
-
+  
     if (name === 'startDate') {
       const today = new Date();
       const selectedDate = new Date(value);
@@ -58,7 +64,7 @@ const EmployeeForm = ({ selectedEmployee, onSave }) => {
         setDateError('');
       }
     }
-
+  
     if (name === 'email') {
       // Basic email regex validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -68,13 +74,12 @@ const EmployeeForm = ({ selectedEmployee, onSave }) => {
         setEmailError('');
       }
     }
-
+  
     setEmployee((prevEmployee) => ({
       ...prevEmployee,
       [name]: value,
     }));
   };
-
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     console.log(file);
@@ -121,7 +126,7 @@ const EmployeeForm = ({ selectedEmployee, onSave }) => {
       });
     } catch (error) {
       if (error.name === 'QuotaExceededError') {
-        setStorageError('Local storage limit exceeded. Please clear some space.');
+        setStorageError('firestore jstorage limit exceeded. Please clear some space.');
       }
     }
   };

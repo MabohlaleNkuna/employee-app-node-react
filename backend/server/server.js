@@ -66,27 +66,82 @@ app.get('/employees', async (req, res) => {
 });
 
 // Update an employee
-app.put('/employees/:id', async (req, res) => {
+app.put('/employees/:id', upload.single('file'), async (req, res) => {
   const { id } = req.params;
-  const employeeData = req.body;
+  const { name, surname, email, idNum, position, department, phone, startDate } = req.body;
 
   try {
-    await db.collection('employees').doc(id).update(employeeData);
+    const employeeDoc = await db.collection('employees').doc(id).get();
+
+    if (!employeeDoc.exists) {
+      return res.status(404).send({ message: 'Employee not found' });
+    }
+    
+    const employeeData = employeeDoc.data();
+    let imageUrl = employeeData.imageUrl; // Corrected to imageUrl
+
+    if (req.file) {
+      // Delete the old image if it exists
+      if (imageUrl) {
+        const oldFileName = imageUrl.split('/').pop(); // Extract the filename from the URL
+        const oldFile = bucket.file(oldFileName);
+        await oldFile.delete(); // Delete the old file from Firebase Storage
+      }
+
+      const newFileName = `${uuidv4()}_${req.file.originalname}`; // Generate new file name
+      const newFile = bucket.file(newFileName);
+
+      await newFile.save(req.file.buffer, {
+        metadata: { contentType: req.file.mimetype },
+        public: true,
+      });
+
+      imageUrl = `https://storage.googleapis.com/${bucket.name}/${newFileName}`; // Updated image URL
+    }
+    
+    await db.collection('employees').doc(id).update({
+      name,
+      surname,
+      email,
+      idNum,
+      position,
+      department,
+      phone,
+      startDate,
+      imageUrl 
+    });
+
     res.status(200).send({ message: 'Employee updated successfully' });
   } catch (error) {
-    res.status(500).send({ message: 'Error updating employee', error });
+    console.error('Error updating employee:', error);
+    res.status(500).send({ message: 'Error updating employee', error: error.message });
   }
 });
 
-// Delete an employee
 app.delete('/employees/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
+    const employeeDoc = await db.collection('employees').doc(id).get();
+
+    if (!employeeDoc.exists) {
+      return res.status(404).send({ message: 'Employee not found' });
+    }
+
+    const employeeData = employeeDoc.data();
+    const imageUrl = employeeData.imageUrl;
+    // Delete the employee document
     await db.collection('employees').doc(id).delete();
-    res.status(200).send({ message: 'Employee deleted successfully' });
+
+    if (imageUrl) {
+      const fileName = imageUrl.split('/').pop(); // Extract the file name from the URL
+      const file = bucket.file(fileName);
+      await file.delete(); // Delete the file from Firebase Storage
+    }
+    res.status(200).send({ message: 'Employee and image deleted successfully' });
   } catch (error) {
-    res.status(500).send({ message: 'Error deleting employee', error });
+    console.error('Error deleting employee:', error); // Log the error
+    res.status(500).send({ message: 'Error deleting employee', error: error.message });
   }
 });
 

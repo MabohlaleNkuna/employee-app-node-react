@@ -30,12 +30,15 @@ export const addEmployee = async (employee) => {
 
 // Function to update an employee
 export const updateEmployee = async (id, employee) => {
+  const formData = new FormData();
+  
+ 
+  for (const key in employee) {
+    formData.append(key, employee[key]);
+  }
   const response = await fetch(`${API_URL}/employees/${id}`, {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(employee),
+    body: formData,
   });
   if (!response.ok) {
     throw new Error('Failed to update employee');
