@@ -3,17 +3,57 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
-const { db, bucket } = require('./firebaseAdmin');
-
+const { db, bucket, admin } = require('./firebaseAdmin');
+var cookieParser = require('cookie-parser')
+var csrf = require('csurf')
+var csrfProtection = csrf({ cookie: true })
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true}));
+
 app.use(bodyParser.json({ limit: '10mb' }));
+
+app.use(cookieParser())
+app.use(csrfProtection)
+app.all("*", (req, res, next) => {
+  res.cookie("XSRF-TOKEN", req.csrfToken());
+  
+  next();
+});
 
 require('dotenv').config();
 
 const storage = multer.memoryStorage(); 
 const upload = multer({ storage: storage });
+app.get('/', (req, res) => {
+  res.json({status: "success"})
+})
+app.post("/login", (req, res) => {
+  
+  const idToken = req.body.idToken.toString();
 
+  const expiresIn = 60 * 60 * 24 * 5 * 1000;
+
+  admin
+    .auth()
+    .createSessionCookie(idToken, { expiresIn })
+    .then(
+      (sessionCookie) => {
+        const options = { maxAge: expiresIn, httpOnly: true };
+        res.cookie("session", sessionCookie, options);
+        res.end(JSON.stringify({ status: "success" }));
+      },
+      (error) => {
+        res.status(401).send("UNAUTHORIZED REQUEST!");
+      }
+    );
+});
+app.get("/logout", (req, res) => {
+  res.clearCookie("session");
+  res.send({status: "success"});
+  //res.redirect("/login");
+});
 
 app.post('/employees', upload.single('file'), async (req, res) => {
   console.log(req.body); 
@@ -50,7 +90,7 @@ app.post('/employees', upload.single('file'), async (req, res) => {
 
     res.status(201).send({ message: 'Employee added successfully', id: docRef.id });
   } catch (error) {
-    console.error('Error adding employee:', error); // Log the error
+    console.error('Error adding employee:', error); 
     res.status(500).send({ message: 'Error adding employee', error: error.message });
   }
 });

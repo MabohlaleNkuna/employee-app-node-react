@@ -18,8 +18,8 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   storageBucket: 'employee-app-node-react.appspot.com',
 });
-firebase.auth().setPersistence(firebase.auth.Auth.Persistence.NONE);
+
 const db = admin.firestore();
 const bucket = admin.storage().bucket();
 
-module.exports = { db, bucket };
+module.exports = { db, bucket, admin };
