@@ -1,4 +1,3 @@
-// App.js
 import React, { useState, useEffect } from 'react'; 
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { fetchEmployees, addEmployee, updateEmployee, deleteEmployee } from './api'; 
@@ -12,6 +11,7 @@ import Loader from './components/Loader';
 import Register from './components/Register'; 
 import Login from './components/Login'; 
 import Navbar from './components/Navbar'; // Import Navbar
+import { auth } from './firebase'; // Import Firebase auth
 import './App.css';
 
 const App = () => {
@@ -20,6 +20,7 @@ const App = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false); 
+  const [user, setUser] = useState(null); // State to store logged-in user
 
   useEffect(() => {
     const loadEmployees = async () => {
@@ -35,6 +36,19 @@ const App = () => {
     };
 
     loadEmployees();
+  }, []);
+
+  // Firebase Auth state observer to check for logged-in user
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        setUser(user); // Set user if logged in
+      } else {
+        setUser(null); // Set user to null if not logged in
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const handleAddOrUpdateEmployee = async (employee) => {
@@ -102,7 +116,7 @@ const App = () => {
   return (
     <Router>
       <div className="app">
-        <Navbar /> {/* Add Navbar here */}
+        <Navbar user={user} /> {/* Pass user to Navbar */}
         <HeaderComp />
         <Routes>
           <Route path="/" element={<Navigate to="/employees" />} />

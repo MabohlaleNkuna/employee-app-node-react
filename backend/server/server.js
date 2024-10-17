@@ -4,63 +4,67 @@ const bodyParser = require('body-parser');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const { db, bucket, admin } = require('./firebaseAdmin');
-var cookieParser = require('cookie-parser')
-var csrf = require('csurf')
-var csrfProtection = csrf({ cookie: true })
+const cookieParser = require('cookie-parser');
+const csrf = require('csurf');
 const app = express();
-app.use(cors({
-  origin: true,
-  credentials: true}));
 
+// Middleware setup
+app.use(cors({ origin: true, credentials: true }));
 app.use(bodyParser.json({ limit: '10mb' }));
+app.use(cookieParser());
 
-app.use(cookieParser())
-app.use(csrfProtection)
+// CSRF protection
+const csrfProtection = csrf({ cookie: true });
+app.use(csrfProtection);
 app.all("*", (req, res, next) => {
   res.cookie("XSRF-TOKEN", req.csrfToken());
-  
   next();
 });
 
+// Load environment variables
 require('dotenv').config();
 
-const storage = multer.memoryStorage(); 
+// Setup file storage for uploads
+const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
+
+// Basic route for testing
 app.get('/', (req, res) => {
-  res.json({status: "success"})
-})
-app.post("/login", (req, res) => {
-  
-  const idToken = req.body.idToken.toString();
-
-  const expiresIn = 60 * 60 * 24 * 5 * 1000;
-
-  admin
-    .auth()
-    .createSessionCookie(idToken, { expiresIn })
-    .then(
-      (sessionCookie) => {
-        const options = { maxAge: expiresIn, httpOnly: true };
-        res.cookie("session", sessionCookie, options);
-        res.end(JSON.stringify({ status: "success" }));
-      },
-      (error) => {
-        res.status(401).send("UNAUTHORIZED REQUEST!");
-      }
-    );
+  res.json({ status: "success" });
 });
-app.get("/logout", (req, res) => {
+
+// Middleware to clear cookies
+const clearCookies = (req, res, next) => {
   res.clearCookie("session");
-  res.send({status: "success"});
-  //res.redirect("/login");
+  res.clearCookie("XSRF-TOKEN"); 
+  next();
+};
+
+// Login route
+app.post("/login", (req, res) => {
+  const idToken = req.body.idToken.toString();
+  const expiresIn = 60 * 60 * 24  * 1000; 
+
+  admin.auth().createSessionCookie(idToken, { expiresIn })
+    .then((sessionCookie) => {
+      const options = { maxAge: expiresIn, httpOnly: true };
+      res.cookie("session", sessionCookie, options);
+      res.end(JSON.stringify({ status: "success" }));
+    })
+    .catch((error) => {
+      res.status(401).send("UNAUTHORIZED REQUEST!");
+    });
 });
 
+// Logout route
+app.get("/logout", clearCookies, (req, res) => {
+  res.send({ status: "success" });
+});
+
+// Add new employee
 app.post('/employees', upload.single('file'), async (req, res) => {
-  console.log(req.body); 
-  console.log(req.file); 
-  
   const { name, surname, email, idNum, position, department, phone, startDate } = req.body;
-  
+
   try {
     let imageUrl = '';
 
@@ -73,7 +77,7 @@ app.post('/employees', upload.single('file'), async (req, res) => {
         public: true,
       });
 
-      imageUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+      imageUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`; 
     }
 
     const docRef = await db.collection('employees').add({
@@ -94,6 +98,7 @@ app.post('/employees', upload.single('file'), async (req, res) => {
     res.status(500).send({ message: 'Error adding employee', error: error.message });
   }
 });
+
 // Fetch all employees
 app.get('/employees', async (req, res) => {
   try {
@@ -105,7 +110,7 @@ app.get('/employees', async (req, res) => {
   }
 });
 
-// Update an employee
+// Update employee
 app.put('/employees/:id', upload.single('file'), async (req, res) => {
   const { id } = req.params;
   const { name, surname, email, idNum, position, department, phone, startDate } = req.body;
@@ -128,7 +133,7 @@ app.put('/employees/:id', upload.single('file'), async (req, res) => {
         await oldFile.delete(); // Delete the old file from Firebase Storage
       }
 
-      const newFileName = `${uuidv4()}_${req.file.originalname}`; // Generate new file name
+      const newFileName = `${uuidv4()}_${req.file.originalname}`; // Corrected string interpolation
       const newFile = bucket.file(newFileName);
 
       await newFile.save(req.file.buffer, {
@@ -136,7 +141,7 @@ app.put('/employees/:id', upload.single('file'), async (req, res) => {
         public: true,
       });
 
-      imageUrl = `https://storage.googleapis.com/${bucket.name}/${newFileName}`; // Updated image URL
+      imageUrl = `https://storage.googleapis.com/${bucket.name}/${newFileName}`; // Corrected string interpolation
     }
     
     await db.collection('employees').doc(id).update({
@@ -158,6 +163,7 @@ app.put('/employees/:id', upload.single('file'), async (req, res) => {
   }
 });
 
+// Delete employee
 app.delete('/employees/:id', async (req, res) => {
   const { id } = req.params;
 
@@ -170,6 +176,7 @@ app.delete('/employees/:id', async (req, res) => {
 
     const employeeData = employeeDoc.data();
     const imageUrl = employeeData.imageUrl;
+    
     // Delete the employee document
     await db.collection('employees').doc(id).delete();
 
@@ -180,7 +187,7 @@ app.delete('/employees/:id', async (req, res) => {
     }
     res.status(200).send({ message: 'Employee and image deleted successfully' });
   } catch (error) {
-    console.error('Error deleting employee:', error); // Log the error
+    console.error('Error deleting employee:', error);
     res.status(500).send({ message: 'Error deleting employee', error: error.message });
   }
 });
@@ -188,5 +195,5 @@ app.delete('/employees/:id', async (req, res) => {
 // Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`); // Corrected string interpolation
 });

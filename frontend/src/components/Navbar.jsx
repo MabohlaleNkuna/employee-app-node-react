@@ -1,4 +1,3 @@
-// src/components/Navbar.js
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../firebase'; 
@@ -9,6 +8,13 @@ const Navbar = ({ user }) => {
 
   const handleLogout = async () => {
     try {
+      // Request to the backend to clear cookies
+      await fetch('http://localhost:5000/logout', {
+        method: 'GET',
+        credentials: 'include', 
+      });
+
+      // Sign out using Firebase authentication
       await signOut(auth);
       navigate('/login'); 
     } catch (error) {
@@ -57,18 +63,13 @@ const Navbar = ({ user }) => {
         <li style={styles.linkItem}>
           <Link to="/" style={styles.link}>Home</Link>
         </li>
-        {!user ? (
-          <>
-            <li style={styles.linkItem}>
-              <Link to="/register" style={styles.link}>Register</Link>
-            </li>
-            <li style={styles.linkItem}>
-              <Link to="/login" style={styles.link}>Login</Link>
-            </li>
-          </>
-        ) : (
+        
+        <li style={styles.linkItem}>
+          <button onClick={handleLogout} style={styles.button}>Logout</button>
+        </li>
+        {!user && (
           <li style={styles.linkItem}>
-            <button onClick={handleLogout} style={styles.button}>Logout</button>
+            <Link to="/login" style={styles.link}>Login</Link>
           </li>
         )}
       </ul>
