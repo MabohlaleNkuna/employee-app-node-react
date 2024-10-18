@@ -61,7 +61,7 @@ const Navbar = ({ user }) => {
       </div>
       <ul style={styles.links}>
         <li style={styles.linkItem}>
-          <Link to="/" style={styles.link}>Home</Link>
+          <Link to="/employees" style={styles.link}>Home</Link>
         </li>
         
         <li style={styles.linkItem}>

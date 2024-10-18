@@ -20,7 +20,7 @@ const App = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false); 
-  const [user, setUser] = useState(null); // State to store logged-in user
+  const [user, setUser] = useState(null); 
 
   useEffect(() => {
     const loadEmployees = async () => {
@@ -35,16 +35,17 @@ const App = () => {
       }
     };
 
-    loadEmployees();
-  }, []);
+    if (user) {
+      loadEmployees();
+    }
+  }, [user]);
 
-  // Firebase Auth state observer to check for logged-in user
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
-        setUser(user); // Set user if logged in
+        setUser(user); 
       } else {
-        setUser(null); // Set user to null if not logged in
+        setUser(null); 
       }
     });
 
@@ -84,7 +85,7 @@ const App = () => {
     } catch (error) {
       console.error(error);
     } finally {
-      setLoading(false); // Hide loader after action
+      setLoading(false);
     }
   };
 
@@ -119,24 +120,28 @@ const App = () => {
         <Navbar user={user} /> {/* Pass user to Navbar */}
         <HeaderComp />
         <Routes>
-          <Route path="/" element={<Navigate to="/employees" />} />
+          <Route path="/" element={<Navigate to={user ? "/employees" : "/login"} />} />
           <Route path="/employees" element={
-            <>
-              <SearchBar onSearch={handleSearch} />
-              <Button className="custom-button" onClick={handleAddEmployeeClick}>Add New Employee</Button>
-              <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-                <EmployeeForm
-                  selectedEmployee={selectedEmployee}
-                  onSave={handleAddOrUpdateEmployee}
+            user ? (
+              <>
+                <SearchBar onSearch={handleSearch} />
+                <Button className="custom-button" onClick={handleAddEmployeeClick}>Add New Employee</Button>
+                <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+                  <EmployeeForm
+                    selectedEmployee={selectedEmployee}
+                    onSave={handleAddOrUpdateEmployee}
+                  />
+                </Modal>
+                {loading && <Loader />} 
+                <EmployeeList
+                  employees={filteredEmployees}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
                 />
-              </Modal>
-              {loading && <Loader />} 
-              <EmployeeList
-                employees={filteredEmployees}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            </>
+              </>
+            ) : (
+              <Navigate to="/login" />
+            )
           } />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
